@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "applicationinsights": "^1.0.1",
     "botbuilder": "^3.14.0",
+    "dotenv-extended": "^2.0.1",
     "restify": "^6.3.4"
   }
 }
