@@ -12,6 +12,7 @@
     "applicationinsights": "^1.0.1",
     "botbuilder": "^3.14.0",
     "dotenv-extended": "^2.0.1",
+    "fs": "0.0.1-security",
     "needle": "^2.2.0",
     "restify": "^6.3.4",
     "url": "^0.11.0",

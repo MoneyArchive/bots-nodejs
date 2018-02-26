@@ -9,6 +9,9 @@ var builder = require('botbuilder'),
     captionService = require('./caption-service'),
     cards = require("./cards");
 
+var fs = require('fs');
+var rooms = require("./rooms.json");
+
 // Application Insight
 var telemetryModule = require('./telemetry-module.js');
 var appInsights = require('applicationinsights');
@@ -36,7 +39,7 @@ var bot = new builder.UniversalBot(connector, function (session) {
         captionService
             .getCaptionFromStream(stream)
             .then(function (caption) {
-                handleSuccessResponse(session, "I think it's "+caption);
+                handleSuccessResponse(session, "I think it's " + caption);
             })
             .catch(function (error) {
                 handleErrorResponse(session, error);
@@ -44,7 +47,7 @@ var bot = new builder.UniversalBot(connector, function (session) {
 
         captionService.getFaceFromStream(stream)
             .then(function (caption) {
-                handleSuccessResponse(session, "人臉：\n\n"+caption);
+                handleSuccessResponse(session, "人臉：\n\n" + caption);
             })
             .catch(function (error) {
                 handleErrorResponse(session, error);
@@ -94,6 +97,133 @@ var bot = new builder.UniversalBot(connector, function (session) {
     }
 
     session.send(msg);
+});
+
+var recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
+bot.recognizer(recognizer);
+
+// welcome intent
+bot.dialog('welcome', function (session) {
+    session.endDialog("Welcome, 您向我問好，您說：" + session.message.text);
+}).triggerAction({
+    matches: 'welcome'
+});
+
+// query intent
+bot.dialog('query', [
+    function (session, args, next) {
+        var roomEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'room');
+        if (!roomEntity) {
+            builder.Prompts.text(session, '請輸入欲查詢之會議室');
+        } else {
+            next({
+                response: roomEntity.entity
+            });
+        }
+    },
+    function (session, results) {
+        var roomName = results.response;
+
+        // query room status
+        var room = rooms.filter(function (value) {
+            return value.hasOwnProperty(roomName); // Get only elements, which have such a key
+        })[0];
+
+        if (room) {
+            var msg = "會議室：" + roomName + "，" + (room.isLend ? "已被租借" : "尚未租借");
+        } else {
+            var msg = "找不到會議室：" + roomName;
+        }
+
+        session.endDialog(msg);
+    }
+]).triggerAction({
+    matches: 'query',
+    onInterrupted: function (session) {
+        session.send('請輸入欲查詢之會議室');
+    }
+});
+
+// lend intent
+bot.dialog('lend', [function (session, args, next) {
+        var roomEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'room');
+        if (!roomEntity) {
+            builder.Prompts.text(session, '請輸入欲租借之會議室');
+        } else {
+            next({
+                response: roomEntity.entity
+            });
+        }
+    },
+    function (session, results) {
+        var roomName = results.response;
+
+        // query room status
+        var room = rooms.filter(function (value) {
+            return value.hasOwnProperty(roomName); // Get only elements, which have such a key
+        })[0];
+
+        if (room) {
+            if (room.isLend) {
+                var msg = "會議室：" + roomName + "，" + "已被租借，租借失敗！";
+            } else {
+                room.isLend = true;
+                fs.writeFile("./rooms.json", JSON.stringify(rooms), function (err) {
+                    if (err) return console.log(err);
+                    console.log(JSON.stringify(rooms));
+                    console.log('writing to ' + "./rooms.json");
+                })
+                var msg = "會議室：" + roomName + "，" + "租借成功！";
+            }
+        } else {
+            var msg = "找不到會議室：" + roomName;
+        }
+
+        session.endDialog(msg);
+    }
+]).triggerAction({
+    matches: 'lend'
+});
+
+// return intent
+bot.dialog('return', [function (session, args, next) {
+    var roomEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'room');
+    if (!roomEntity) {
+        builder.Prompts.text(session, '請輸入欲歸還之會議室');
+    } else {
+        next({
+            response: roomEntity.entity
+        });
+    }
+},
+function (session, results) {
+    var roomName = results.response;
+
+    // query room status
+    var room = rooms.filter(function (value) {
+        return value.hasOwnProperty(roomName); // Get only elements, which have such a key
+    })[0];
+
+    if (room) {
+        if (!room.isLend) {
+            var msg = "會議室：" + roomName + "，" + "尚未被租借，歸還失敗！";
+        } else {
+            room.isLend = false;
+            fs.writeFile("./rooms.json", JSON.stringify(rooms), function (err) {
+                if (err) return console.log(err);
+                console.log(JSON.stringify(rooms));
+                console.log('writing to ' + "./rooms.json");
+            })
+            var msg = "會議室：" + roomName + "，" + "歸還成功！";
+        }
+    } else {
+        var msg = "找不到會議室：" + roomName;
+    }
+
+    session.endDialog(msg);
+}
+]).triggerAction({
+    matches: 'return'
 });
 
 // Welcome mseeage, demo adaptive card
@@ -164,10 +294,9 @@ function parseAnchorTag(input) {
 
 // Response Handling
 function handleSuccessResponse(session, caption) {
-    if(caption==="人臉："||caption==="I think it\'s "){
+    if (caption === "人臉：" || caption === "I think it\'s ") {
 
-    }
-    else if (caption) {
+    } else if (caption) {
         session.send(caption);
     } else {
         session.send('找不到相關資訊');
