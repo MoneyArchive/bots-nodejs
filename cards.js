@@ -92,7 +92,7 @@ module.exports = {
             .subtitle('聊天機器人')
             .text('建置、連線、部署及管理智慧機器人，使其在網路、應用程式、Cortana、Microsoft Teams、Skype、Slack、Facebook Messenger 等管道上，與您的使用者自然地互動。利用完整的機器人建置環境快速入門。')
             .images([
-                builder.CardImage.create(session, 'https://azurecomcdn.azureedge.net/cvt-071a8257034e642968baa286b4aec156c0678f9c4939a52889db8e7b4ede45da/images/page/services/bot-service/accelerated.svg')
+                builder.CardImage.create(session, 'https://i.imgur.com/vwqj0Ko.png')
             ])
             .buttons([
                 builder.CardAction.openUrl(session, 'https://azure.microsoft.com/zh-tw/services/bot-service/', '開始使用..')
@@ -105,7 +105,7 @@ module.exports = {
             .subtitle('聊天機器人')
             .text('建置、連線、部署及管理智慧機器人，使其在網路、應用程式、Cortana、Microsoft Teams、Skype、Slack、Facebook Messenger 等管道上，與您的使用者自然地互動。利用完整的機器人建置環境快速入門。')
             .images([
-                builder.CardImage.create(session, 'https://azurecomcdn.azureedge.net/cvt-071a8257034e642968baa286b4aec156c0678f9c4939a52889db8e7b4ede45da/images/page/services/bot-service/accelerated.svg')
+                builder.CardImage.create(session, 'https://i.imgur.com/vwqj0Ko.png')
             ])
             .buttons([
                 builder.CardAction.openUrl(session, 'https://docs.microsoft.com/bot-framework/', '開始使用..')
@@ -149,6 +149,7 @@ module.exports = {
                 url: 'http://i.imgur.com/SJgMp1f.gif'
             }]);
     },
+
     createVideoCard: function createVideoCard(session) {
         return new builder.VideoCard(session)
             .title('Big Buck Bunny')
@@ -223,5 +224,22 @@ module.exports = {
             ])
         ];
     },
-    listCard
+    cardList: function(session){
+        return new builder.HeroCard(session)
+            .title('展示機器人')
+            .subtitle('選單')
+            .images([
+                builder.CardImage.create(session, 'https://i.imgur.com/vwqj0Ko.png')
+            ])
+            .buttons([
+                builder.CardAction.postBack(session, 'HeroCard', "HeroCard"),
+                builder.CardAction.postBack(session, 'ThumbnailCard', "ThumbnailCard"),
+                builder.CardAction.postBack(session, 'ReceiptCard', "ReceiptCard"),
+                builder.CardAction.postBack(session, 'SigninCard', "SigninCard"),
+                builder.CardAction.postBack(session, 'AnimationCard', "AnimationCard"),
+                builder.CardAction.postBack(session, 'VideoCard', "VideoCard"),
+                builder.CardAction.postBack(session, 'AudioCard', "AudioCard"),
+                builder.CardAction.postBack(session, 'CarouselCard', "CarouselCard"),
+            ]);
+    }
 };

@@ -60,6 +60,11 @@ var bot = new builder.UniversalBot(connector, function (session) {
             var card = cards.getCardsAttachments(session);
             msg = new builder.Message(session).attachmentLayout(builder.AttachmentLayout.carousel).attachments(card);
             break;
+        case "menu":
+        case "Menu":
+        var card = cards.cardList(session);
+        msg = new builder.Message(session).addAttachment(card);
+            break;
         default:
             msg = new builder.Message(session).text("收到：%s，字串長度：%s", session.message.text, session.message.text.length);
     }
@@ -74,8 +79,7 @@ bot.on('conversationUpdate', function (message) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
                 // Display Welcome card with Hotels and Flights search options
-                var msg = new builder.Message().address(message.address).text("歡迎使用展示機器人")
-                    .addAttachment(cards.listCard);
+                var msg = new builder.Message().address(message.address).text("歡迎使用展示機器人，輸入 Menu 來展開選單")                    
                 bot.send(msg);
             }
         });
